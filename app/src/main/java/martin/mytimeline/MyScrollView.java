@@ -86,6 +86,7 @@ public class MyScrollView extends ScrollView {
      * 根据距离计算时间
      */
     private void setTimeByPosition(int scrollY) {
+
         long milliTime = Utils.dateToStamp("2017-08-29 15:10:30");
 
         int yscroll = getScrollY();
