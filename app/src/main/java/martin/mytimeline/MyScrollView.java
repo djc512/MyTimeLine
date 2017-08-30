@@ -16,8 +16,8 @@ import android.widget.TextView;
 
 public class MyScrollView extends ScrollView {
 
-    private int currentPos;
     private Context ctx;
+    private int currentPos;
     private int secondPos;
     private String moveTime;
     private int unit;
@@ -29,6 +29,7 @@ public class MyScrollView extends ScrollView {
     private int dis;
     private String time = "2017-08-29 15:00:00"; //当前的时间
     private FrameLayout fl;
+    private int width;//屏幕的宽度
 
     private Handler handler = new Handler() {
         @Override
@@ -54,10 +55,8 @@ public class MyScrollView extends ScrollView {
 
     private void init() {
         ctx = getContext();
-        unit = Utils.dip2px(ctx, 60); //每个时间段的高度
-        dis = Utils.dip2px(ctx, 90);//指示线距离顶部的高度
-        ivWidth = Utils.dip2px(ctx, 120);//设置片段的宽度
-
+        unit = Utils.dip2px(ctx, 60); //每个时间刻度之间的Margin值
+        dis = Utils.dip2px(ctx, 60);//指示线距离顶部的高度
     }
 
     /**
@@ -67,6 +66,7 @@ public class MyScrollView extends ScrollView {
         fl = new FrameLayout(ctx);
         setScale();
         setTimePisode();
+        setIndicate();
         addView(fl);
 
         //延迟执行，防止刻度未画完，就已经滚动
@@ -81,9 +81,31 @@ public class MyScrollView extends ScrollView {
     }
 
     /**
+     * 设置竖直指示线
+     */
+    private void setIndicate() {
+
+        int indicateWidth = Utils.dip2px(ctx, 10);
+        //设置开始时间 14:00:00
+        startPos = moveByTime(14, 20, 00);//设置开始时间
+        endPos = moveByTime(14, 40, 0);//设置结束时间
+        disPos = Math.abs(startPos - endPos);
+
+        ImageView iv = new ImageView(ctx);
+        iv.setBackgroundResource(R.drawable.shape_indicate);
+        LayoutParams ivParams = new LayoutParams(indicateWidth, disPos);//设置区段的宽高
+        ivParams.leftMargin = ivWidth;//设置距离左边距的位置
+        ivParams.topMargin = endPos + dis;//设置距离顶部的高低
+        iv.setLayoutParams(ivParams);
+        fl.addView(iv);
+    }
+
+    /**
      * 设置时间段
      */
     private void setTimePisode() {
+
+        ivWidth = width / 4;//设置片段的宽度
 
         //设置开始时间 14:00:00
         startPos = moveByTime(14, 20, 00);//设置开始时间
@@ -93,7 +115,7 @@ public class MyScrollView extends ScrollView {
         ImageView iv = new ImageView(ctx);
         iv.setBackgroundResource(R.color.colorAccent);
         LayoutParams ivParams = new LayoutParams(ivWidth, disPos);//设置区段的宽高
-        ivParams.leftMargin = ivWidth;//设置距离左边距的位置
+        ivParams.leftMargin = ivWidth * 2;//设置距离左边距的位置
         ivParams.topMargin = endPos + dis;//设置距离顶部的高低
         iv.setLayoutParams(ivParams);
         fl.addView(iv);
@@ -107,7 +129,7 @@ public class MyScrollView extends ScrollView {
         iv1.setBackgroundResource(R.mipmap.android);
         iv.setScaleType(ImageView.ScaleType.FIT_XY);
         LayoutParams ivParams1 = new LayoutParams(ivWidth, disPos1);
-        ivParams1.leftMargin = ivWidth;
+        ivParams1.leftMargin = ivWidth * 2;
         ivParams1.topMargin = endPos1 + dis;
         iv1.setLayoutParams(ivParams1);
         fl.addView(iv1);
@@ -119,6 +141,16 @@ public class MyScrollView extends ScrollView {
     private void setScale() {
         LinearLayout llTv = new LinearLayout(ctx);
         llTv.setOrientation(LinearLayout.VERTICAL);
+
+        for (int i = 1; i > -1; i--) {
+            TextView tv = new TextView(ctx);
+            tv.setText(i + "");
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, Utils.dip2px(ctx, 20));
+            params.topMargin = unit;
+            tv.setLayoutParams(params);
+            llTv.addView(tv);
+        }
+
         for (int i = 23; i > -1; i--) {
             TextView tv = new TextView(ctx);
             tv.setText(i + "");
@@ -127,6 +159,16 @@ public class MyScrollView extends ScrollView {
             tv.setLayoutParams(params);
             llTv.addView(tv);
         }
+
+        for (int i = 23; i > 20; i--) {
+            TextView tv = new TextView(ctx);
+            tv.setText(i + "");
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, Utils.dip2px(ctx, 20));
+            params.topMargin = unit;
+            tv.setLayoutParams(params);
+            llTv.addView(tv);
+        }
+
         fl.addView(llTv);
     }
 
@@ -135,10 +177,11 @@ public class MyScrollView extends ScrollView {
      */
     private int moveByTime(int hour, int minute, int second) {
         //此时小时应该滚动的位置为
-        int hourPos = Utils.dip2px(ctx, 60 * (24 - hour) + 20 * (23 - hour) + 10);
-        int minutePos = Utils.dip2px(ctx, 80) / 60 * minute;
+//        int hourPos = Utils.dip2px(ctx, 60 * (24 - hour) + 20 * (23 - hour) + 10);
+        int hourPos = Utils.dip2px(ctx, 60 * (26 - hour) + 20 * (25 - hour) + 10);
+        int minutePos = Utils.dip2px(ctx, 60 + 10 + 10) / 60 * minute;//实际一个刻度为80
         secondPos = Utils.dip2px(ctx, 80) / 3600 * second;
-        currentPos = hourPos - minutePos - secondPos - dis;
+        currentPos = hourPos - minutePos - secondPos - dis;//减去指示线的Magin,保证与当前的时间保持一致
 
         return currentPos;
     }
@@ -177,8 +220,11 @@ public class MyScrollView extends ScrollView {
 
     /**
      * 初始化数据
+     *
+     * @param width
      */
-    public void setData() {
+    public void setData(int width) {
+        this.width = width;
         handler.sendEmptyMessage(0);
     }
 }
