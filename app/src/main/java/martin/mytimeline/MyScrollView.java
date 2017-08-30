@@ -1,8 +1,8 @@
 package martin.mytimeline;
 
 import android.content.Context;
-import android.graphics.Canvas;
 import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -28,6 +28,14 @@ public class MyScrollView extends ScrollView {
     private int ivWidth;
     private int dis;
     private String time = "2017-08-29 15:00:00"; //当前的时间
+    private FrameLayout fl;
+
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            setState();
+        }
+    };
 
     public MyScrollView(Context context) {
         super(context);
@@ -46,24 +54,36 @@ public class MyScrollView extends ScrollView {
 
     private void init() {
         ctx = getContext();
-        //每个时间段的高度
-        unit = Utils.dip2px(ctx, 60);
+        unit = Utils.dip2px(ctx, 60); //每个时间段的高度
         dis = Utils.dip2px(ctx, 90);//指示线距离顶部的高度
         ivWidth = Utils.dip2px(ctx, 120);//设置片段的宽度
 
-        FrameLayout fl = new FrameLayout(ctx);
-        LinearLayout llTv = new LinearLayout(ctx);
-        llTv.setOrientation(LinearLayout.VERTICAL);
-        for (int i = 23; i > -1; i--) {
-            TextView tv = new TextView(ctx);
-            tv.setText(i + "");
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, Utils.dip2px(ctx, 20));
-            params.topMargin = unit;
-            tv.setLayoutParams(params);
-            llTv.addView(tv);
-        }
-        fl.addView(llTv);
+    }
 
+    /**
+     * 设置初始化控件的状态
+     */
+    private void setState() {
+        fl = new FrameLayout(ctx);
+        setScale();
+        setTimePisode();
+        addView(fl);
+
+        //延迟执行，防止刻度未画完，就已经滚动
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                //时间2017-08-29 15:00:00，默认的当前时间
+                final int pos = moveByTime(15, 0, 0);
+                scrollTo(0, pos);
+            }
+        }, 200);
+    }
+
+    /**
+     * 设置时间段
+     */
+    private void setTimePisode() {
 
         //设置开始时间 14:00:00
         startPos = moveByTime(14, 20, 00);//设置开始时间
@@ -91,28 +111,23 @@ public class MyScrollView extends ScrollView {
         ivParams1.topMargin = endPos1 + dis;
         iv1.setLayoutParams(ivParams1);
         fl.addView(iv1);
-
-        addView(fl);
-
-        //延迟执行，防止刻度未画完，就已经滚动
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                //时间2017-08-29 15:00:00，默认的当前时间
-                final int pos = moveByTime(15, 0, 0);
-                scrollTo(0, pos);
-            }
-        }, 200);
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
+    /**
+     * 设置刻度线
+     */
+    private void setScale() {
+        LinearLayout llTv = new LinearLayout(ctx);
+        llTv.setOrientation(LinearLayout.VERTICAL);
+        for (int i = 23; i > -1; i--) {
+            TextView tv = new TextView(ctx);
+            tv.setText(i + "");
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, Utils.dip2px(ctx, 20));
+            params.topMargin = unit;
+            tv.setLayoutParams(params);
+            llTv.addView(tv);
+        }
+        fl.addView(llTv);
     }
 
     /**
@@ -158,5 +173,12 @@ public class MyScrollView extends ScrollView {
 
     public interface OnTimeChangeListener {
         void onTimeChange(String time);
+    }
+
+    /**
+     * 初始化数据
+     */
+    public void setData() {
+        handler.sendEmptyMessage(0);
     }
 }

@@ -38,5 +38,6 @@ public class MainActivity extends AppCompatActivity {
         params.topMargin = Utils.dip2px(this, 90);
         line.setLayoutParams(params);
 
+        sv.setData();
     }
 }
