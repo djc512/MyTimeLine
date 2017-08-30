@@ -130,6 +130,7 @@ public class MyScrollView extends ScrollView {
         secondPos = Utils.dip2px(ctx, 80) / 3600 * second;
         currentPos = hourPos - minutePos - secondPos - dis;
 
+
         return currentPos;
     }
 
