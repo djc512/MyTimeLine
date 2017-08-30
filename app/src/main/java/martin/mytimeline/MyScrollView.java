@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -17,8 +16,6 @@ import android.widget.TextView;
 
 public class MyScrollView extends ScrollView {
 
-    //当前的时间
-
     private int currentPos;
     private Context ctx;
     private int secondPos;
@@ -30,7 +27,7 @@ public class MyScrollView extends ScrollView {
     private int disPos;
     private int ivWidth;
     private int dis;
-    private String time = "2017-08-29 15:00:00";
+    private String time = "2017-08-29 15:00:00"; //当前的时间
 
     public MyScrollView(Context context) {
         super(context);
@@ -48,13 +45,13 @@ public class MyScrollView extends ScrollView {
     }
 
     private void init() {
-
         ctx = getContext();
         //每个时间段的高度
         unit = Utils.dip2px(ctx, 60);
         dis = Utils.dip2px(ctx, 90);//指示线距离顶部的高度
+        ivWidth = Utils.dip2px(ctx, 120);//设置片段的宽度
 
-        final FrameLayout fl = new FrameLayout(ctx);
+        FrameLayout fl = new FrameLayout(ctx);
         LinearLayout llTv = new LinearLayout(ctx);
         llTv.setOrientation(LinearLayout.VERTICAL);
         for (int i = 23; i > -1; i--) {
@@ -73,8 +70,6 @@ public class MyScrollView extends ScrollView {
         endPos = moveByTime(14, 40, 0);//设置结束时间
         disPos = Math.abs(startPos - endPos);
 
-        ivWidth = Utils.dip2px(ctx, 120);//设置片段的宽度
-
         ImageView iv = new ImageView(ctx);
         iv.setBackgroundResource(R.color.colorAccent);
         LayoutParams ivParams = new LayoutParams(ivWidth, disPos);//设置区段的宽高
@@ -83,12 +78,11 @@ public class MyScrollView extends ScrollView {
         iv.setLayoutParams(ivParams);
         fl.addView(iv);
 
-
+        //设置开始时间
         int startPos1 = moveByTime(17, 30, 00);
         int endPos1 = moveByTime(17, 50, 00);
         int disPos1 = Math.abs(startPos1 - endPos1);
 
-        Log.i(TAG, "startPos1:" + startPos1);
         ImageView iv1 = new ImageView(ctx);
         iv1.setBackgroundResource(R.mipmap.android);
         iv.setScaleType(ImageView.ScaleType.FIT_XY);
@@ -100,6 +94,7 @@ public class MyScrollView extends ScrollView {
 
         addView(fl);
 
+        //延迟执行，防止刻度未画完，就已经滚动
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -163,11 +158,5 @@ public class MyScrollView extends ScrollView {
 
     public interface OnTimeChangeListener {
         void onTimeChange(String time);
-    }
-
-    private int width;
-
-    public void setWidth(int width) {
-
     }
 }
