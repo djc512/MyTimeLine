@@ -1,9 +1,12 @@
 package martin.mytimeline;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -13,13 +16,21 @@ import android.widget.TextView;
  */
 
 public class MyScrollView extends ScrollView {
-    private int unit = Utils.dip2px(getContext(), 60);//每个时间段的高度
-    private int minuteUnit = Utils.dip2px(getContext(), 1);
-    private int secondUnit = Utils.dip2px(getContext(), (float) 0.017);
+
     //当前的时间
-    private int hour = 12;
-    private int minute;//
-    private int second;
+
+    private int currentPos;
+    private Context ctx;
+    private int secondPos;
+    private String moveTime;
+    private int unit;
+    private String TAG = "MyScrollView";
+    private int startPos;
+    private int endPos;
+    private int disPos;
+    private int ivWidth;
+    private int dis;
+    private String time = "2017-08-29 15:00:00";
 
     public MyScrollView(Context context) {
         super(context);
@@ -37,88 +48,125 @@ public class MyScrollView extends ScrollView {
     }
 
     private void init() {
-        Log.i("MyScrollView", "unit:" + unit + "minuteUnit:" + minuteUnit + "secondUnit:" + secondUnit);
 
-        LinearLayout ll = new LinearLayout(getContext());
-        ll.setOrientation(LinearLayout.VERTICAL);
+        ctx = getContext();
+        //每个时间段的高度
+        unit = Utils.dip2px(ctx, 60);
+        dis = Utils.dip2px(ctx, 90);//指示线距离顶部的高度
+
+        final FrameLayout fl = new FrameLayout(ctx);
+        LinearLayout llTv = new LinearLayout(ctx);
+        llTv.setOrientation(LinearLayout.VERTICAL);
         for (int i = 23; i > -1; i--) {
-            TextView tv = new TextView(getContext());
+            TextView tv = new TextView(ctx);
             tv.setText(i + "");
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, Utils.dip2px(getContext(), 20));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, Utils.dip2px(ctx, 20));
             params.topMargin = unit;
             tv.setLayoutParams(params);
-            ll.addView(tv);
+            llTv.addView(tv);
         }
-        addView(ll);
+        fl.addView(llTv);
 
 
-//        Calendar calendar = Calendar.getInstance();
-//        hour = calendar.get(Calendar.HOUR_OF_DAY);
-//        minute = calendar.get(Calendar.MINUTE);
-//        second = calendar.get(Calendar.SECOND);
-//        moveByTime(hour, minute, second);
-        moveByTime(22, 15, second);
-    }
+        //设置开始时间 14:00:00
+        startPos = moveByTime(14, 20, 00);//设置开始时间
+        endPos = moveByTime(14, 40, 0);//设置结束时间
+        disPos = Math.abs(startPos - endPos);
 
-    /**
-     * 根据时间滑动到指定位置
-     *
-     * @param hour
-     * @param minute
-     * @param second 默认为30s,便于计算
-     */
-    private void moveByTime(final int hour, final int minute, int second) {
-        //延迟一点滚动，防止界面未绘画完成就已经滚动了
+        ivWidth = Utils.dip2px(ctx, 120);//设置片段的宽度
+
+        ImageView iv = new ImageView(ctx);
+        iv.setBackgroundResource(R.color.colorAccent);
+        LayoutParams ivParams = new LayoutParams(ivWidth, disPos);//设置区段的宽高
+        ivParams.leftMargin = ivWidth;//设置距离左边距的位置
+        ivParams.topMargin = endPos + dis;//设置距离顶部的高低
+        iv.setLayoutParams(ivParams);
+        fl.addView(iv);
+
+
+        int startPos1 = moveByTime(17, 30, 00);
+        int endPos1 = moveByTime(17, 50, 00);
+        int disPos1 = Math.abs(startPos1 - endPos1);
+
+        Log.i(TAG, "startPos1:" + startPos1);
+        ImageView iv1 = new ImageView(ctx);
+        iv1.setBackgroundResource(R.mipmap.android);
+        iv.setScaleType(ImageView.ScaleType.FIT_XY);
+        LayoutParams ivParams1 = new LayoutParams(ivWidth, disPos1);
+        ivParams1.leftMargin = ivWidth;
+        ivParams1.topMargin = endPos1 + dis;
+        iv1.setLayoutParams(ivParams1);
+        fl.addView(iv1);
+
+        addView(fl);
+
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                //此时小时应该滚动的位置为
-                int hourPos = Utils.dip2px(getContext(), 60 * (24 - hour) + 10 * (23 - hour) + 10);
-//                int minutePos = Utils.dip2px(getContext(), minute);
-
-                currentPos = hourPos - Utils.dip2px(getContext(), 110);//当前的位置
-                scrollTo(0, currentPos);
+                //时间2017-08-29 15:00:00，默认的当前时间
+                final int pos = moveByTime(15, 0, 0);
+                scrollTo(0, pos);
             }
         }, 200);
     }
 
-    private int currentHour;
-    private int currentMinute;
-    private int currentPos;
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+    }
 
     /**
-     * @param l
-     * @param scrollYPos  当前在y轴上的位置
-     * @param oldl
-     * @param oscrollYPos 移动前在y轴上的距离
+     * 根据时间计算要滚动的位置
      */
+    private int moveByTime(int hour, int minute, int second) {
+        //此时小时应该滚动的位置为
+        int hourPos = Utils.dip2px(ctx, 60 * (24 - hour) + 20 * (23 - hour) + 10);
+        int minutePos = Utils.dip2px(ctx, 80) / 60 * minute;
+        secondPos = Utils.dip2px(ctx, 80) / 3600 * second;
+        currentPos = hourPos - minutePos - secondPos - dis;
+        return currentPos;
+    }
+
     @Override
-    protected void onScrollChanged(int l, int scrollYPos, int oldl, int oscrollYPos) {
-        super.onScrollChanged(l, scrollYPos, oldl, oscrollYPos);
+    protected void onScrollChanged(int l, int scrollY, int oldl, int oScrollY) {
+        setTimeByPosition();
+    }
 
-        int pxDistancePos = scrollYPos - currentPos;
-        int scrollMinute = pxDistancePos / 3;//滚动的分钟
-        int startMinute;
-        if (pxDistancePos > 0) {//向上滚动，时间变小
-            if (pxDistancePos <= unit) {//说明滑动不到一个小时,即为当前的分钟数
-                currentMinute = 60 - scrollMinute;//当前的分钟
+    /**
+     * 根据距离计算时间
+     */
+    private void setTimeByPosition() {
+        long milliTime = Utils.dateToStamp(time);//获取当前时间的时间戳
 
-                if (currentMinute == 60) {
-                    currentHour = hour - 1;
-                } else if (currentMinute == 0) {//说明当前时间已经划到下一个时间点,重置当前位置
-                    hour = currentHour;
-                    currentMinute = 60;
-                    currentPos = scrollYPos;
+        int yscroll = getScrollY();//获取当前滚动的位置
+        long disPos = yscroll - currentPos;
+        long moveMillinTime = disPos * 3600 * 1000 / (Utils.dip2px(ctx, 80));//移动的毫秒数
+        long disTime = milliTime - moveMillinTime;
+        moveTime = Utils.stampToDate(disTime);
 
-                }
-                ToastUtil.show(getContext(), hour + ":" + currentMinute);
-
-            } else {
-
-
-            }
-        } else {//向下滚动，时间变大
-
+        if (onTimeChangeListener != null) {
+            onTimeChangeListener.onTimeChange(moveTime);
         }
+    }
+
+    public void setOnTimeChangeListener(OnTimeChangeListener onTimeChangeListener) {
+        this.onTimeChangeListener = onTimeChangeListener;
+    }
+
+    private OnTimeChangeListener onTimeChangeListener;
+
+    public interface OnTimeChangeListener {
+        void onTimeChange(String time);
+    }
+
+    private int width;
+
+    public void setWidth(int width) {
+
     }
 }
