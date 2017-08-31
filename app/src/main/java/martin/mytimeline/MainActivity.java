@@ -9,7 +9,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
-
     private View line;
     private TextView Tvtime;
     private MyScrollView sv;
@@ -41,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
         sv = (MyScrollView) findViewById(R.id.sv);
 
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) line.getLayoutParams();
+        params.height = Utils.dip2px(this, 1);
         params.topMargin = Utils.dip2px(this, 60);
         line.setLayoutParams(params);
 
