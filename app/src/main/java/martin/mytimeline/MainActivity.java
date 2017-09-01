@@ -22,16 +22,8 @@ public class MainActivity extends AppCompatActivity {
         width = wm.getDefaultDisplay().getWidth();
 
         initView();
+        initData();
         setListener();
-    }
-
-    private void setListener() {
-        sv.setOnTimeChangeListener(new MyScrollView.OnTimeChangeListener() {
-            @Override
-            public void onTimeChange(String time) {
-                Tvtime.setText(time);
-            }
-        });
     }
 
     private void initView() {
@@ -43,7 +35,21 @@ public class MainActivity extends AppCompatActivity {
         params.height = Utils.dip2px(this, 1);
         params.topMargin = Utils.dip2px(this, 60);
         line.setLayoutParams(params);
+    }
 
-        sv.setData(width);
+    private void initData() {
+
+        long timeMillis = System.currentTimeMillis();
+        String time = Utils.stampToDate(timeMillis);
+        sv.setData(width,time);
+    }
+
+    private void setListener() {
+        sv.setOnTimeChangeListener(new MyScrollView.OnTimeChangeListener() {
+            @Override
+            public void onTimeChange(String time) {
+                Tvtime.setText(time);
+            }
+        });
     }
 }

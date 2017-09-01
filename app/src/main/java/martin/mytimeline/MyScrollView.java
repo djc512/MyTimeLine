@@ -12,6 +12,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.Calendar;
 
 /**
  * Created by admin on 2017/8/29.
@@ -29,7 +32,7 @@ public class MyScrollView extends ScrollView {
     private int disPos;
     private int ivWidth;
     private int dis;
-    private String time = "2017-08-29 15:00:00"; //当前的时间
+    private String time; //当前的时间
     private FrameLayout fl;
     private int width;//屏幕的宽度
 
@@ -37,6 +40,7 @@ public class MyScrollView extends ScrollView {
     private int scaleMargin;//刻度值之间的间距，默认60
     private int scaleValue;//刻度值的大小，默认20
     private int indicateMargin;//指示线距离顶部的值，默认60
+    private Calendar calendar;
 
     private Handler handler = new Handler() {
         @Override
@@ -44,6 +48,9 @@ public class MyScrollView extends ScrollView {
             setState();
         }
     };
+    private int hour;
+    private int minute;
+    private int second;
 
     public MyScrollView(Context context) {
         super(context);
@@ -62,6 +69,8 @@ public class MyScrollView extends ScrollView {
 
     private void init() {
         ctx = getContext();
+        calendar = Calendar.getInstance();
+
         scaleValue = 20;
         scaleMargin = 60;
         indicateMargin = 60;
@@ -87,7 +96,11 @@ public class MyScrollView extends ScrollView {
             @Override
             public void run() {
                 //时间2017-08-29 15:00:00，默认的当前时间
-                final int pos = moveByTime(15, 0, 0);
+
+                final int pos = moveByTime(calendar.get(Calendar.HOUR_OF_DAY),
+                        calendar.get(Calendar.MINUTE),
+                        calendar.get(Calendar.SECOND));
+
                 scrollTo(0, pos);
             }
         }, 200);
@@ -233,14 +246,20 @@ public class MyScrollView extends ScrollView {
         return currentPos;
     }
 
+
     @Override
     protected void onScrollChanged(int l, int scrollY, int oldl, int oScrollY) {
         setTimeByPosition();
-        // 设置暂停时间2017-08-29 18:00:00，默认的当前时间
-        int moveByTime = moveByTime(18, 30, 0);
+        // 设置暂停时间，默认当前时间
+        hour = calendar.get(Calendar.HOUR_OF_DAY);
+        minute = calendar.get(Calendar.MINUTE);
+        second = calendar.get(Calendar.SECOND);
+
+        int moveByTime = moveByTime(hour, minute, second);
         Log.i("MyScrollView", "moveByTime:" + moveByTime + "scrollY:" + scrollY);
         if (moveByTime > scrollY) {//暂停滚动
             scrollTo(0, moveByTime);
+            Toast.makeText(ctx, "已滚动到当前时间", Toast.LENGTH_SHORT).show();
             return;
         }
     }
@@ -276,9 +295,11 @@ public class MyScrollView extends ScrollView {
      * 初始化数据
      *
      * @param width
+     * @param time
      */
-    public void setData(int width) {
+    public void setData(int width, String time) {
         this.width = width;
+        this.time = time;
         handler.sendEmptyMessage(0);
     }
 }
