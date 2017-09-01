@@ -6,6 +6,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -42,15 +44,31 @@ public class MyScrollView extends ScrollView {
     private int indicateMargin;//指示线距离顶部的值，默认60
     private Calendar calendar;
 
-    private Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            setState();
-        }
-    };
     private int hour;
     private int minute;
     private int second;
+
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            int what = msg.what;
+            int top = 0;
+            switch (what) {
+                case 0:
+                    top = 60;
+                    break;
+                case 1:
+                    top = 120;
+                    break;
+                case 2:
+                    top = 60;
+                    break;
+            }
+
+            removeAllViews();
+            setState(top);
+        }
+    };
 
     public MyScrollView(Context context) {
         super(context);
@@ -69,22 +87,29 @@ public class MyScrollView extends ScrollView {
 
     private void init() {
         ctx = getContext();
+        detector = new ScaleGestureDetector(ctx, new ScaleGestureListener());
         calendar = Calendar.getInstance();
 
         scaleValue = 20;
-        scaleMargin = 60;
         indicateMargin = 60;
 
-        unit = Utils.dip2px(ctx, scaleMargin); //每个时间刻度之间的Margin值
+//        scaleMargin = 60;
+//        unit = Utils.dip2px(ctx, scaleMargin); //每个时间刻度之间的Margin值
+
         dis = Utils.dip2px(ctx, indicateMargin);//指示线距离顶部的高度
         leftMargin = Utils.dip2px(ctx, 10);
     }
 
     /**
      * 设置初始化控件的状态
+     * @param top
      */
-    private void setState() {
+    private void setState(int top) {
         fl = new FrameLayout(ctx);
+
+        scaleMargin = top;
+        unit = Utils.dip2px(ctx, scaleMargin); //每个时间刻度之间的Margin值
+
         setScaleLine();
         setScale();
         setTimePisode();
@@ -301,5 +326,51 @@ public class MyScrollView extends ScrollView {
         this.width = width;
         this.time = time;
         handler.sendEmptyMessage(0);
+    }
+
+    private ScaleGestureDetector detector;
+
+    public class ScaleGestureListener implements ScaleGestureDetector.OnScaleGestureListener {
+
+        @Override
+        public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+
+            return false;
+        }
+
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+            return true;
+        }
+
+        @Override
+        public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+            float currentSpan = scaleGestureDetector.getCurrentSpan();
+            float previousSpan = scaleGestureDetector.getPreviousSpan();
+
+            if (currentSpan > previousSpan) {
+                handler.sendEmptyMessage(1);
+
+                Toast.makeText(ctx, "放大手势", Toast.LENGTH_SHORT).show();
+            } else if (currentSpan < previousSpan) {
+                handler.sendEmptyMessage(2);
+
+                Toast.makeText(ctx, "缩小手势", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        // TODO Auto-generated method stub
+        super.onTouchEvent(ev);
+        return detector.onTouchEvent(ev);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        detector.onTouchEvent(ev);
+        super.dispatchTouchEvent(ev);
+        return true;
     }
 }
