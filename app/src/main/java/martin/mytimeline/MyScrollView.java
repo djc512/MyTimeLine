@@ -46,6 +46,7 @@ public class MyScrollView extends ScrollView {
     private int hour;
     private int minute;
     private int second;
+    private long downTime;
 
     private Handler handler = new Handler() {
         @Override
@@ -365,11 +366,24 @@ public class MyScrollView extends ScrollView {
     public boolean onTouchEvent(MotionEvent ev) {
         super.onTouchEvent(ev);
 
+        int action = ev.getAction();
         int pointerCount = ev.getPointerCount();
         if (pointerCount == 2) {
             return detector.onTouchEvent(ev);
         }
-
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                downTime = System.currentTimeMillis();
+                break;
+            case MotionEvent.ACTION_UP:
+                long upTime = System.currentTimeMillis();
+                if (upTime - downTime > 60) {
+                    break;
+                } else {
+                    handler.sendEmptyMessage(0);
+                }
+                break;
+        }
         return super.onTouchEvent(ev);
     }
 
@@ -382,7 +396,6 @@ public class MyScrollView extends ScrollView {
 
     @Override
     public void fling(int velocityY) {
-
         super.fling(velocityY);
     }
 }
