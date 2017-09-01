@@ -369,6 +369,7 @@ public class MyScrollView extends ScrollView {
         if (pointerCount == 2) {
             return detector.onTouchEvent(ev);
         }
+
         return super.onTouchEvent(ev);
     }
 
