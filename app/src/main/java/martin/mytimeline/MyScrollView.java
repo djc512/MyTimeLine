@@ -14,7 +14,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.Calendar;
 
@@ -61,7 +60,7 @@ public class MyScrollView extends ScrollView {
                     top = 120;
                     break;
                 case 2:
-                    top = 60;
+                    top = 30;
                     break;
             }
 
@@ -102,6 +101,7 @@ public class MyScrollView extends ScrollView {
 
     /**
      * 设置初始化控件的状态
+     *
      * @param top
      */
     private void setState(int top) {
@@ -115,6 +115,8 @@ public class MyScrollView extends ScrollView {
         setTimePisode();
         setIndicate();
         addView(fl);
+
+        invalidate();
 
         //延迟执行，防止刻度未画完，就已经滚动
         new Handler().postDelayed(new Runnable() {
@@ -282,9 +284,9 @@ public class MyScrollView extends ScrollView {
 
         int moveByTime = moveByTime(hour, minute, second);
         Log.i("MyScrollView", "moveByTime:" + moveByTime + "scrollY:" + scrollY);
-        if (moveByTime > scrollY) {//暂停滚动
+        //暂停滚动
+        if (moveByTime > scrollY) {
             scrollTo(0, moveByTime);
-            Toast.makeText(ctx, "已滚动到当前时间", Toast.LENGTH_SHORT).show();
             return;
         }
     }
@@ -347,24 +349,27 @@ public class MyScrollView extends ScrollView {
         public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
             float currentSpan = scaleGestureDetector.getCurrentSpan();
             float previousSpan = scaleGestureDetector.getPreviousSpan();
-
+            Log.d("ScaleGestureListener", "currentSpan:" + currentSpan + "previousSpan:" + previousSpan);
             if (currentSpan > previousSpan) {
                 handler.sendEmptyMessage(1);
-
-                Toast.makeText(ctx, "放大手势", Toast.LENGTH_SHORT).show();
+                ToastUtil.show(ctx, "放大手势");
             } else if (currentSpan < previousSpan) {
                 handler.sendEmptyMessage(2);
 
-                Toast.makeText(ctx, "缩小手势", Toast.LENGTH_SHORT).show();
+                ToastUtil.show(ctx, "缩小手势");
             }
         }
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        // TODO Auto-generated method stub
         super.onTouchEvent(ev);
-        return detector.onTouchEvent(ev);
+
+        int pointerCount = ev.getPointerCount();
+        if (pointerCount == 2) {
+            return detector.onTouchEvent(ev);
+        }
+        return super.onTouchEvent(ev);
     }
 
     @Override
@@ -372,5 +377,11 @@ public class MyScrollView extends ScrollView {
         detector.onTouchEvent(ev);
         super.dispatchTouchEvent(ev);
         return true;
+    }
+
+    @Override
+    public void fling(int velocityY) {
+
+        super.fling(velocityY);
     }
 }
