@@ -23,7 +23,6 @@ public class MyScrollView extends ScrollView {
     private int secondPos;
     private String moveTime;
     private int unit;
-    private String TAG = "MyScrollView";
     private int startPos;
     private int endPos;
     private int disPos;
@@ -33,13 +32,17 @@ public class MyScrollView extends ScrollView {
     private FrameLayout fl;
     private int width;//屏幕的宽度
 
+    private int leftMargin;
+    private int scaleMargin;//刻度值之间的间距，默认60
+    private int scaleValue;//刻度值的大小，默认20
+    private int indicateMargin;//指示线距离顶部的值，默认60
+
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             setState();
         }
     };
-    private int leftMargin;
 
     public MyScrollView(Context context) {
         super(context);
@@ -58,8 +61,12 @@ public class MyScrollView extends ScrollView {
 
     private void init() {
         ctx = getContext();
-        unit = Utils.dip2px(ctx, 60); //每个时间刻度之间的Margin值
-        dis = Utils.dip2px(ctx, 60);//指示线距离顶部的高度
+        scaleValue = 20;
+        scaleMargin = 60;
+        indicateMargin = 60;
+
+        unit = Utils.dip2px(ctx, scaleMargin); //每个时间刻度之间的Margin值
+        dis = Utils.dip2px(ctx, indicateMargin);//指示线距离顶部的高度
         leftMargin = Utils.dip2px(ctx, 10);
     }
 
@@ -95,9 +102,9 @@ public class MyScrollView extends ScrollView {
             View view = new View(ctx);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(Utils.dip2px(ctx, 10), Utils.dip2px(ctx, 1));
             if (i == 27) {
-                params.topMargin = Utils.dip2px(ctx, 60 + (float) (10 - 0.5));//第一个位置，要减去0.5个刻度线的高度
+                params.topMargin = Utils.dip2px(ctx, scaleMargin + (float) (scaleValue / 2 - 0.5));//第一个位置，要减去0.5个刻度线的高度
             } else {
-                params.topMargin = Utils.dip2px(ctx, 60 + 20 - 1);//其他的位置，减去1个刻度线的高度
+                params.topMargin = Utils.dip2px(ctx, scaleMargin + scaleValue - 1);//其他的位置，减去1个刻度线的高度
             }
             view.setLayoutParams(params);
             view.setBackgroundColor(Color.RED);
@@ -132,7 +139,7 @@ public class MyScrollView extends ScrollView {
         iv1.setBackgroundResource(R.drawable.shape_indicate_pink);
         LayoutParams ivParams1 = new LayoutParams(indicateWidth, disPos1);//设置区段的宽高
         ivParams1.leftMargin = ivWidth + Utils.dip2px(ctx, 20);//设置距离左边距的位置
-        ivParams1.topMargin = endPos1 + dis;//设置距离顶部的高低
+        ivParams1.topMargin = endPos1 + dis;//设置距离顶部的高低(需要加上指示线距离顶部的高度)
         iv1.setLayoutParams(ivParams1);
         fl.addView(iv1);
     }
@@ -181,7 +188,7 @@ public class MyScrollView extends ScrollView {
         for (int i = 0; i > -1; i--) {
             TextView tv = new TextView(ctx);
             tv.setText(i + "");
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, Utils.dip2px(ctx, 20));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, Utils.dip2px(ctx, scaleValue));
             params.leftMargin = leftMargin;
             params.topMargin = unit;
             tv.setLayoutParams(params);
@@ -191,7 +198,7 @@ public class MyScrollView extends ScrollView {
         for (int i = 23; i > -1; i--) {
             TextView tv = new TextView(ctx);
             tv.setText(i + "");
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, Utils.dip2px(ctx, 20));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, Utils.dip2px(ctx, scaleValue));
             params.leftMargin = leftMargin;
             params.topMargin = unit;
             tv.setLayoutParams(params);
@@ -201,7 +208,7 @@ public class MyScrollView extends ScrollView {
         for (int i = 23; i > 20; i--) {
             TextView tv = new TextView(ctx);
             tv.setText(i + "");
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, Utils.dip2px(ctx, 20));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, Utils.dip2px(ctx, scaleValue));
             params.leftMargin = leftMargin;
             params.topMargin = unit;
             tv.setLayoutParams(params);
@@ -217,9 +224,9 @@ public class MyScrollView extends ScrollView {
     private int moveByTime(int hour, int minute, int second) {
         //此时小时应该滚动的位置为
 //        int hourPos = Utils.dip2px(ctx, 60 * (24 - hour) + 20 * (23 - hour) + 10);
-        int hourPos = Utils.dip2px(ctx, 60 * (25 - hour) + 20 * (24 - hour) + 10);
-        int minutePos = Utils.dip2px(ctx, 60 + 10 + 10) / 60 * minute;//实际一个刻度为80
-        secondPos = Utils.dip2px(ctx, 80) / 3600 * second;
+        int hourPos = Utils.dip2px(ctx, scaleMargin * (25 - hour) + scaleValue * (24 - hour) + scaleValue / 2);
+        int minutePos = Utils.dip2px(ctx, scaleMargin + scaleValue) / 60 * minute;//实际一个刻度为80
+        secondPos = Utils.dip2px(ctx, scaleMargin + scaleValue) / 3600 * second;
         currentPos = hourPos - minutePos - secondPos - dis;//减去指示线的Magin,保证与当前的时间保持一致
 
         return currentPos;
@@ -238,8 +245,8 @@ public class MyScrollView extends ScrollView {
 
         int yscroll = getScrollY();//获取当前滚动的位置
         long disPos = yscroll - currentPos;
-        long moveMillinTime = disPos * 3600 * 1000 / (Utils.dip2px(ctx, 80));//移动的毫秒数
-        long disTime = milliTime - moveMillinTime;
+        long moveMillinTime = disPos * 3600 * 1000 / (Utils.dip2px(ctx, scaleMargin + scaleValue));//移动的毫秒数
+        long disTime = milliTime - moveMillinTime;//移动后的毫秒数
         moveTime = Utils.stampToDate(disTime);
 
         if (onTimeChangeListener != null) {
