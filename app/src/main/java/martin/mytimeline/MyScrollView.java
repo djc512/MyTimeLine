@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -235,6 +236,13 @@ public class MyScrollView extends ScrollView {
     @Override
     protected void onScrollChanged(int l, int scrollY, int oldl, int oScrollY) {
         setTimeByPosition();
+        // 设置暂停时间2017-08-29 18:00:00，默认的当前时间
+        int moveByTime = moveByTime(18, 30, 0);
+        Log.i("MyScrollView", "moveByTime:" + moveByTime + "scrollY:" + scrollY);
+        if (moveByTime > scrollY) {//暂停滚动
+            scrollTo(0, moveByTime);
+            return;
+        }
     }
 
     /**
